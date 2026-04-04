@@ -297,7 +297,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <div class="card">
           <div class="card-title"><span class="step-num">1</span>Photo</div>
           <div class="upload-zone" onclick="document.getElementById('s-photo-inp').click()">
-            <input type="file" id="s-photo-inp" accept="image/*" capture="environment" onchange="handleSinglePhoto(event)">
+            <input type="file" id="s-photo-inp" accept="image/*" onchange="handleSinglePhoto(event)">
             <div style="font-size:32px;margin-bottom:8px">📷</div>
             <div style="font-size:15px;font-weight:700;margin-bottom:4px">Take or upload photo</div>
             <div style="font-size:13px;color:var(--text2)">AI identifies brand, style, size & value</div>
@@ -406,7 +406,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
           <div class="card">
             <div class="card-title"><span class="step-num">📷</span>Photo this item</div>
             <div class="upload-zone" onclick="document.getElementById('l-photo-inp').click()">
-              <input type="file" id="l-photo-inp" accept="image/*" capture="environment" onchange="handleLotPhoto(event)">
+              <input type="file" id="l-photo-inp" accept="image/*" onchange="handleLotPhoto(event)">
               <div style="font-size:32px;margin-bottom:8px">📷</div>
               <div style="font-size:15px;font-weight:700;margin-bottom:4px">Take or upload photo</div>
               <div style="font-size:13px;color:var(--text2)">AI will identify this item automatically</div>
