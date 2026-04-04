@@ -187,6 +187,29 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .badge-lot{display:inline-flex;align-items:center;font-size:10px;padding:2px 7px;border-radius:20px;background:var(--amber-bg);color:var(--amber);border:0.5px solid rgba(239,159,39,0.3);font-weight:700;margin-left:6px}
 .preview-img{max-width:100%;max-height:160px;border-radius:var(--radius);border:0.5px solid var(--border);display:block;margin-top:12px}
 .empty-state{text-align:center;padding:32px 16px;font-size:14px;color:var(--text2)}
+
+/* HELP PAGE */
+.qs-step{border-bottom:0.5px solid var(--border);cursor:pointer}
+.qs-step:last-child{border-bottom:none}
+.qs-header{display:flex;align-items:center;gap:10px;padding:12px 0}
+.qs-num{width:26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.qs-title{flex:1;font-size:13px;font-weight:700}
+.qs-arrow{font-size:18px;color:var(--text3);transition:transform 0.2s;font-weight:300}
+.qs-body{display:none;font-size:13px;line-height:1.65;color:var(--text2);padding:0 0 12px 36px}
+.qs-step.open .qs-arrow{transform:rotate(90deg);color:var(--blue)}
+.qs-step.open .qs-body{display:block}
+.qs-step.open .qs-title{color:var(--blue)}
+.help-section{border-bottom:0.5px solid var(--border);cursor:pointer}
+.help-section:last-child{border-bottom:none}
+.help-header{display:flex;align-items:center;gap:10px;padding:12px 0}
+.help-icon{font-size:16px;flex-shrink:0;width:24px;text-align:center}
+.help-title{flex:1;font-size:13px;font-weight:700}
+.help-arrow{font-size:18px;color:var(--text3);transition:transform 0.2s;font-weight:300}
+.help-body{display:none;font-size:13px;line-height:1.65;color:var(--text2);padding:0 0 14px 34px}
+.help-section.open .help-arrow{transform:rotate(90deg);color:var(--blue)}
+.help-section.open .help-body{display:block}
+.help-section.open .help-title{color:var(--blue)}
+
 .notif-row{display:flex;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border);align-items:flex-start}
 .notif-row:last-child{border-bottom:none}
 .ndot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
@@ -234,6 +257,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <button class="sub-btn" onclick="goTo('ship')">Ship</button>
       <button class="sub-btn" onclick="goTo('insights')">Insights</button>
       <button class="sub-btn" onclick="goTo('expenses')">Expenses</button>
+      <button class="sub-btn" onclick="goTo('help')">Help</button>
     </div>
   </div>
 
@@ -680,6 +704,167 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       </div>
     </div>
 
+    <!-- HELP -->
+    <div class="page" id="page-help">
+      <div style="margin-bottom:16px">
+        <div style="font-size:20px;font-weight:700">Help & guide</div>
+        <div style="font-size:13px;color:var(--text2);margin-top:3px">Quick start + full feature reference</div>
+      </div>
+
+      <!-- QUICK START -->
+      <div class="card">
+        <div class="card-title">⚡ Quick start — your first item in 5 steps</div>
+        <div id="qs-steps">
+          <div class="qs-step" onclick="toggleQS(this)">
+            <div class="qs-header">
+              <div class="qs-num">1</div>
+              <div class="qs-title">Tap + Add in the bottom bar</div>
+              <div class="qs-arrow">›</div>
+            </div>
+            <div class="qs-body">Choose <strong>Single item</strong> for one item or <strong>Bulk lot</strong> if you bought a group of items together (like a bag of clothes at a garage sale).</div>
+          </div>
+          <div class="qs-step" onclick="toggleQS(this)">
+            <div class="qs-header">
+              <div class="qs-num">2</div>
+              <div class="qs-title">Take or upload a photo</div>
+              <div class="qs-arrow">›</div>
+            </div>
+            <div class="qs-body">Tap the photo area to open your camera or photo library. You can add as many photos as you like — the <strong>first photo</strong> is sent to the AI for identification. A blue border marks it as the main photo. Add more angles using "+ Add more".</div>
+          </div>
+          <div class="qs-step" onclick="toggleQS(this)">
+            <div class="qs-header">
+              <div class="qs-num">3</div>
+              <div class="qs-title">Review the AI results</div>
+              <div class="qs-arrow">›</div>
+            </div>
+            <div class="qs-body">The AI identifies the brand, type, color, style, size, condition, and estimated resale value. It also writes a Nifty listing title, description, and keywords. <strong>Review and correct anything it got wrong</strong> — AI is good but not perfect, especially for older or niche brands.</div>
+          </div>
+          <div class="qs-step" onclick="toggleQS(this)">
+            <div class="qs-header">
+              <div class="qs-num">4</div>
+              <div class="qs-title">Enter price & assign a bin</div>
+              <div class="qs-arrow">›</div>
+            </div>
+            <div class="qs-body">Enter what you paid and your asking price — the app calculates your profit margin and ROI in real time. Then enter the <strong>bin or box label</strong> where you're storing the item (e.g. "Bin A" or "Box 3"). This is how you'll find it when it sells. Put a matching physical label on your actual bin.</div>
+          </div>
+          <div class="qs-step" onclick="toggleQS(this)">
+            <div class="qs-header">
+              <div class="qs-num">5</div>
+              <div class="qs-title">Save & post to Nifty</div>
+              <div class="qs-arrow">›</div>
+            </div>
+            <div class="qs-body">Tap <strong>"Save & go to Nifty review"</strong> to send the item to the Review queue. In the Review tab, open the item, edit anything, then tap each field (title, description, keywords) to copy it. Switch to the Nifty app and paste. Once you're happy, tap <strong>"Approve & mark listed"</strong> to move it to your active inventory.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FEATURE REFERENCE -->
+      <div class="card">
+        <div class="card-title">📋 Full feature reference</div>
+
+        <div class="help-section" onclick="toggleHelp(this)">
+          <div class="help-header"><span class="help-icon">➕</span><span class="help-title">Adding a single item</span><span class="help-arrow">›</span></div>
+          <div class="help-body">
+            <p>Go to <strong>+ Add → Single item</strong>. Upload one or more photos — the first triggers AI identification. The AI fills in brand, type, color, gender, style, size, condition, estimated resale value, listing title, description, and keywords automatically.</p>
+            <p style="margin-top:8px">Review the AI fields and correct anything wrong. Then enter your cost, asking price, date purchased, sourcing location, bin/box assignment, and optional slot position. Tap <strong>"Save & go to Nifty review"</strong> or <strong>"Save only"</strong> if you're not ready to list yet.</p>
+          </div>
+        </div>
+
+        <div class="help-section" onclick="toggleHelp(this)">
+          <div class="help-header"><span class="help-icon">📦</span><span class="help-title">Adding a bulk lot</span><span class="help-arrow">›</span></div>
+          <div class="help-body">
+            <p>Go to <strong>+ Add → Bulk lot</strong>. A lot is a group of items you bought together for one price — like a $30 bag of clothes from a garage sale. You sell each item individually but track them as a group.</p>
+            <p style="margin-top:8px"><strong>Step 1:</strong> Enter the lot name, total price paid, and number of items. The cost per item is calculated automatically ($30 ÷ 3 items = $10 each).</p>
+            <p style="margin-top:8px"><strong>Step 2:</strong> Add each item one by one — photo, AI ID, your asking price, and bin location. Each item gets its own asking price (e.g. $5, $40, $15).</p>
+            <p style="margin-top:8px"><strong>Step 3:</strong> The <strong>Lots tab</strong> shows a summary: total paid, how much you've recovered as items sell, and a progress bar showing when you've broken even.</p>
+          </div>
+        </div>
+
+        <div class="help-section" onclick="toggleHelp(this)">
+          <div class="help-header"><span class="help-icon">✅</span><span class="help-title">Nifty review queue</span><span class="help-arrow">›</span></div>
+          <div class="help-body">
+            <p>Every item saved with "Save & go to Nifty review" lands here with a purple <strong>Review</strong> badge. The badge count on the tab tells you how many are waiting.</p>
+            <p style="margin-top:8px">Tap <strong>"Full review & edit"</strong> to open the item. You can edit every field — title, brand, price, description, keywords, size, condition, bin location. At the bottom you'll see three tap-to-copy blocks: <strong>Title, Description, Keywords</strong>. Tap each one, switch to Nifty, and paste.</p>
+            <p style="margin-top:8px">Tap <strong>"Approve & mark listed"</strong> when done — the item moves to active inventory with a blue "Listed" status. Or tap <strong>"Quick approve"</strong> to approve without opening the full editor.</p>
+          </div>
+        </div>
+
+        <div class="help-section" onclick="toggleHelp(this)">
+          <div class="help-header"><span class="help-icon">📋</span><span class="help-title">Inventory</span><span class="help-arrow">›</span></div>
+          <div class="help-body">
+            <p>The Inventory tab shows all your items in a table. Use the filter buttons to narrow by status:</p>
+            <p style="margin-top:8px"><strong>Needs review</strong> — saved but not approved for Nifty yet<br><strong>Listed</strong> — approved and posted to Nifty<br><strong>Sold</strong> — marked as sold<br><strong>Lot items</strong> — items that came from a bulk lot<br><strong>Slow movers</strong> — items listed more than 21 days</p>
+            <p style="margin-top:8px">Tap <strong>"Sold"</strong> next to an item when it sells — it moves to the Ship queue automatically and is removed from active inventory. Tap <strong>"Del"</strong> to permanently remove an item.</p>
+          </div>
+        </div>
+
+        <div class="help-section" onclick="toggleHelp(this)">
+          <div class="help-header"><span class="help-icon">🔍</span><span class="help-title">Finding items physically</span><span class="help-arrow">›</span></div>
+          <div class="help-body">
+            <p>The <strong>Find tab</strong> has two tools. <strong>Search</strong> lets you type any name, brand, or bin label to instantly see where an item is stored. <strong>Look up a bin</strong> shows everything stored in a specific bin — type "Bin A" to see all items in that bin.</p>
+            <p style="margin-top:8px">The <strong>Bins tab</strong> shows a visual map of all your storage locations. Tap any bin card to expand it and see every item inside with size, condition, and asking price.</p>
+            <p style="margin-top:8px"><strong>Tip:</strong> Use short, consistent bin labels like "Bin A", "Box 1", "Shelf 2". Put a physical sticker on each bin that matches the label in the app. When something sells, the Ship tab shows you exactly which bin to go to.</p>
+          </div>
+        </div>
+
+        <div class="help-section" onclick="toggleHelp(this)">
+          <div class="help-header"><span class="help-icon">📬</span><span class="help-title">Shipping sold items</span><span class="help-arrow">›</span></div>
+          <div class="help-body">
+            <p>When you mark an item as sold in the Inventory tab, it automatically appears in the <strong>Ship tab</strong> with an amber alert showing the item name, category, size, condition, and — most importantly — the <strong>bin location</strong> so you know exactly where to find it.</p>
+            <p style="margin-top:8px">Tap <strong>"Mark as shipped"</strong> once you've packed and sent it. The item is removed from the ship queue.</p>
+            <p style="margin-top:8px"><strong>Shipping tips:</strong> Poly mailers are much cheaper than boxes for clothing. Use 6×9" for accessories, 10×13" for most clothing, 14.5×19" for coats and bulky items. Get free discounted labels at <strong>Pirateship.com</strong> — about 30% cheaper than USPS counter rates.</p>
+          </div>
+        </div>
+
+        <div class="help-section" onclick="toggleHelp(this)">
+          <div class="help-header"><span class="help-icon">💸</span><span class="help-title">Tracking expenses</span><span class="help-arrow">›</span></div>
+          <div class="help-body">
+            <p>The <strong>Expenses tab</strong> tracks your business operating costs — shipping supplies, gas and mileage for sourcing trips, marketing materials, platform fees, packaging, and anything custom.</p>
+            <p style="margin-top:8px">Select a category, enter the amount, date, and an optional note (e.g. "50-pack poly mailers from Amazon"). Tap <strong>"Add expense"</strong>. All expenses flow into the accounting summary in the Insights tab and reduce your true net profit.</p>
+            <p style="margin-top:8px">This matters for taxes — these are legitimate business deductions. Keep logging them consistently and you'll have a clean record at tax time.</p>
+          </div>
+        </div>
+
+        <div class="help-section" onclick="toggleHelp(this)">
+          <div class="help-header"><span class="help-icon">📊</span><span class="help-title">Insights & accounting</span><span class="help-arrow">›</span></div>
+          <div class="help-body">
+            <p>The <strong>Insights tab</strong> shows your business performance at a glance:</p>
+            <p style="margin-top:8px"><strong>Avg sell time</strong> — how many days items take to sell on average<br><strong>Avg margin</strong> — your average profit percentage after platform fees<br><strong>Best category</strong> — which type of item makes you the most money<br><strong>Lot ROI</strong> — return on investment specifically from bulk lot purchases</p>
+            <p style="margin-top:8px">The <strong>Accounting summary</strong> shows a full P&L breakdown: total invested in current inventory, potential revenue at asking prices, actual revenue from sold items, estimated platform fees (12% by default — adjust in Settings), business expenses, and <strong>true net profit</strong> after everything.</p>
+            <p style="margin-top:8px">You can adjust the platform fee percentage in Settings to match your actual blended rate across Poshmark, eBay, and Etsy.</p>
+          </div>
+        </div>
+
+        <div class="help-section" onclick="toggleHelp(this)">
+          <div class="help-header"><span class="help-icon">☁️</span><span class="help-title">Google Sheets sync</span><span class="help-arrow">›</span></div>
+          <div class="help-body">
+            <p>Your inventory automatically syncs to a shared Google Sheet so both you and your wife see the same data from any device. The sync dot in the top right shows the status — <span style="color:var(--green);font-weight:700">green</span> means synced, <span style="color:#EF9F27;font-weight:700">amber</span> means syncing in progress, <span style="color:var(--red);font-weight:700">red</span> means a sync error.</p>
+            <p style="margin-top:8px">The app syncs automatically 3 seconds after any change. You can also tap <strong>"Sync now"</strong> or <strong>"Pull from Sheets"</strong> in the Insights tab to force a sync or pull the latest data from another device.</p>
+            <p style="margin-top:8px"><strong>Note on photos:</strong> Photos are stored locally on each device — they are too large to store in Google Sheets. All other data (item details, prices, bins, lots, expenses) syncs fully.</p>
+          </div>
+        </div>
+
+        <div class="help-section" onclick="toggleHelp(this)">
+          <div class="help-header"><span class="help-icon">💡</span><span class="help-title">Tips & best practices</span><span class="help-arrow">›</span></div>
+          <div class="help-body">
+            <p><strong>Best time to list:</strong> Thursday through Sunday drives 35% more views on Poshmark and eBay for clothing.</p>
+            <p style="margin-top:8px"><strong>Slow movers:</strong> Items listed 21+ days show a red "Slow" badge. Consider dropping the price 10–15% or bundling with a similar item.</p>
+            <p style="margin-top:8px"><strong>Lot strategy:</strong> Bulk lots from garage sales typically yield 3–5x return when items are split and listed individually. The Lots tab shows your break-even progress in real time.</p>
+            <p style="margin-top:8px"><strong>AI accuracy:</strong> The AI is best at well-known brands (Levi's, Nike, Coach, etc.). For vintage or no-name items, review the title and description carefully before copying to Nifty.</p>
+            <p style="margin-top:8px"><strong>Photo tips:</strong> Natural light produces the best results. Lay clothing flat or hang it. The first photo is what buyers see first in search results — make it the best one.</p>
+            <p style="margin-top:8px"><strong>Backup your data:</strong> Tap "Export CSV" in the Insights tab regularly to keep a spreadsheet backup on your device.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- VERSION -->
+      <div style="text-align:center;padding:16px 0;font-size:12px;color:var(--text3)">
+        Resale Manager · Built with Claude AI<br>
+        <span style="font-size:11px">Tap any section above to expand</span>
+      </div>
+    </div>
+
   </div><!-- /pages -->
 
   <!-- TAB BAR -->
@@ -692,6 +877,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <button class="tab" onclick="goTo('ship')"><div class="tab-icon">📬</div><div>Ship</div></button>
     <button class="tab" onclick="goTo('expenses')"><div class="tab-icon">💸</div><div>Expenses</div></button>
     <button class="tab" onclick="goTo('insights')"><div class="tab-icon">📊</div><div>Insights</div></button>
+    <button class="tab" onclick="goTo('help')"><div class="tab-icon">❓</div><div>Help</div></button>
   </div>
 
 </div><!-- /app -->
@@ -726,7 +912,7 @@ function getFee(){return parseFloat(localStorage.getItem('fee_pct')||'12')}
 function saveFee(){localStorage.setItem('fee_pct',document.getElementById('fee-pct').value)}
 
 // ── NAVIGATION ──
-const PAGES=['dashboard','add','review','inventory','lots','find','bins','ship','insights','expenses'];
+const PAGES=['dashboard','add','review','inventory','lots','find','bins','ship','insights','expenses','help'];
 function goTo(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
@@ -734,7 +920,7 @@ function goTo(id){
   document.getElementById('page-'+id).classList.add('active');
   const sidx=PAGES.indexOf(id);
   if(sidx>=0) document.querySelectorAll('.sub-btn')[sidx].classList.add('active');
-  const tabMap={'dashboard':0,'add':1,'review':2,'lots':3,'inventory':4,'ship':5,'expenses':6,'insights':7};
+  const tabMap={'dashboard':0,'add':1,'review':2,'lots':3,'inventory':4,'ship':5,'expenses':6,'insights':7,'help':8};
   if(tabMap[id]!==undefined) document.querySelectorAll('.tab')[tabMap[id]].classList.add('active');
   if(id==='inventory')renderInv();
   if(id==='dashboard')renderDash();
@@ -748,6 +934,9 @@ function goTo(id){
   updateBinSuggestions();updateBadges();
   document.querySelector('.pages').scrollTo(0,0);
 }
+
+function toggleQS(el){el.classList.toggle('open');}
+function toggleHelp(el){el.classList.toggle('open');}
 
 // ── EXPENSES ──
 const EXP_KEY='resale_expenses_v1';
