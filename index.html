@@ -907,16 +907,44 @@ async function handleLotPhoto(e){
   reader.readAsDataURL(file);
 }
 
-async function analyzeLotPhoto(dataUrl){
-  const b64=dataUrl.split(',')[1],mt=dataUrl.split(';')[0].split(':')[1];
+const GEMINI_API_KEY='AIzaSyBOmQSMtZfAFQ4j3j-bqrQhA6MtEbtHbmU';
+const GEMINI_URL='https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key='+GEMINI_API_KEY;
+const AI_PROMPT=`You are an expert clothing and accessories reseller. Analyze this photo. Return ONLY valid JSON (no markdown, no backticks, no extra text):
+{"type":"e.g. Jeans, Blouse, Sneakers, Handbag","brand":"brand name or Unknown","color":"primary colors","gender":"Womens/Mens/Unisex/Kids","style":"e.g. Vintage, Y2K, Streetwear, Classic, Boho, Athletic","size_guess":"e.g. M, 8, 32x30 or Unknown","condition_guess":"New w/ tags/Like new/Excellent/Good/Fair/As-is","estimated_resale_low":10,"estimated_resale_high":35,"listing_title":"SEO-optimized title under 80 chars for Poshmark eBay Etsy","description":"2-3 sentences: brand style color condition any visible details","keywords":"keyword1, keyword2, keyword3, keyword4, keyword5, keyword6"}`;
+
+async function callGeminiVision(dataUrl){
+  const b64=dataUrl.split(',')[1];
+  const mt=dataUrl.split(';')[0].split(':')[1];
+  const body={
+    contents:[{parts:[
+      {inline_data:{mime_type:mt,data:b64}},
+      {text:AI_PROMPT}
+    ]}],
+    generationConfig:{temperature:0.1,maxOutputTokens:1000}
+  };
+  const resp=await fetch(GEMINI_URL,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(body)
+  });
+  const data=await resp.json();
+  if(data.error)throw new Error(data.error.message);
+  const text=data.candidates[0].content.parts[0].text.replace(/```json|```/g,'').trim();
+  return JSON.parse(text);
+}
+
+async function analyzeSinglePhoto(dataUrl){
   try{
-    const resp=await fetch(WEB_APP_URL,{
-      method:'POST',
-      body:JSON.stringify({action:'analyzeImage',imageData:b64,mediaType:mt})
-    });
-    const data=await resp.json();
-    if(data.error)throw new Error(data.error);
-    lotAI=data.result;
+    singleAI=await callGeminiVision(dataUrl);
+    showSingleAI(singleAI);
+  }catch(err){
+    showSingleAIFallback('AI error: '+err.message);
+  }
+}
+
+async function analyzeLotPhoto(dataUrl){
+  try{
+    lotAI=await callGeminiVision(dataUrl);
     showLotAI(lotAI);
   }catch(err){
     showLotAIFallback('AI error: '+err.message);
@@ -1059,22 +1087,6 @@ async function handleSinglePhoto(e){
     await analyzeSinglePhoto(singlePhoto);
   };
   reader.readAsDataURL(file);
-}
-
-async function analyzeSinglePhoto(dataUrl){
-  const b64=dataUrl.split(',')[1],mt=dataUrl.split(';')[0].split(':')[1];
-  try{
-    const resp=await fetch(WEB_APP_URL,{
-      method:'POST',
-      body:JSON.stringify({action:'analyzeImage',imageData:b64,mediaType:mt})
-    });
-    const data=await resp.json();
-    if(data.error)throw new Error(data.error);
-    singleAI=data.result;
-    showSingleAI(singleAI);
-  }catch(err){
-    showSingleAIFallback('AI error: '+err.message);
-  }
 }
 
 function showSingleAI(r){
