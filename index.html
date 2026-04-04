@@ -1498,7 +1498,7 @@ function exportCSV(){
 function clearAll(){localStorage.removeItem(KEY);localStorage.removeItem(LOTS_KEY);localStorage.removeItem(EXP_KEY);renderInv();renderDash();updateBadges();}
 
 // ── GOOGLE SHEETS SYNC ──
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx_ZvB9-fLlXfN8j8Gx4MdBirOOBY1omCj3CLogr8kGRxMl7lNLsCCjR34vIvoYNclRvA/exec';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzpLC6Gfr0wcZ6GW59BJ1h2o-6tArjdJpW3T46NROf8WHvZoedKCY2SPHXzJmFR8QseKg/exec';
 const SHEET_URL   = 'https://docs.google.com/spreadsheets/d/1TKCpsrWuzylN8eDAcWReceVCIVN73W3PhA99xmcqUII/edit';
 let isSyncing = false;
 let lastSyncTime = parseInt(localStorage.getItem('lastSyncTime')||'0');
