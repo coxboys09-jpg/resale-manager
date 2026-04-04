@@ -918,7 +918,9 @@ async function analyzeLotPhoto(dataUrl){
     if(data.error)throw new Error(data.error);
     lotAI=data.result;
     showLotAI(lotAI);
-  }catch(err){showLotAIFallback();}
+  }catch(err){
+    showLotAIFallback('AI error: '+err.message);
+  }
 }
 
 function showLotAI(r){
@@ -940,12 +942,18 @@ function showLotAI(r){
   updateLotItemMargin();
 }
 
-function showLotAIFallback(){
+function showLotAIFallback(errMsg){
   document.getElementById('l-ai-loading').style.display='none';
   document.getElementById('l-ai-result').style.display='block';
   document.getElementById('l-item-actions').style.display='block';
   ['l-r-type','l-r-brand'].forEach(id=>document.getElementById(id).textContent='Enter below');
   document.getElementById('l-r-value').textContent='Enter manually';
+  if(errMsg){
+    const box=document.getElementById('l-ai-card');
+    let errEl=document.getElementById('l-ai-err');
+    if(!errEl){errEl=document.createElement('div');errEl.id='l-ai-err';errEl.style.cssText='background:var(--red-bg);color:var(--red);border-radius:var(--radius);padding:10px 12px;font-size:12px;margin-bottom:10px;border-left:3px solid var(--red)';box.insertBefore(errEl,document.getElementById('l-ai-result'));}
+    errEl.textContent='⚠ '+errMsg;
+  }
 }
 
 function selLotSize(btn){
@@ -1064,7 +1072,9 @@ async function analyzeSinglePhoto(dataUrl){
     if(data.error)throw new Error(data.error);
     singleAI=data.result;
     showSingleAI(singleAI);
-  }catch(err){showSingleAIFallback();}
+  }catch(err){
+    showSingleAIFallback('AI error: '+err.message);
+  }
 }
 
 function showSingleAI(r){
@@ -1090,11 +1100,17 @@ function showSingleAI(r){
   document.getElementById('s-add-actions').style.display='flex';
 }
 
-function showSingleAIFallback(){
+function showSingleAIFallback(errMsg){
   document.getElementById('s-ai-loading').style.display='none';
   document.getElementById('s-ai-result').style.display='block';
   ['s-r-type','s-r-brand','s-r-color','s-r-gender','s-r-style'].forEach(id=>document.getElementById(id).textContent='Enter below');
   document.getElementById('s-r-value').textContent='Enter manually';
+  if(errMsg){
+    const box=document.getElementById('s-ai-card');
+    let errEl=document.getElementById('s-ai-err');
+    if(!errEl){errEl=document.createElement('div');errEl.id='s-ai-err';errEl.style.cssText='background:var(--red-bg);color:var(--red);border-radius:var(--radius);padding:10px 12px;font-size:12px;margin-bottom:10px;border-left:3px solid var(--red)';box.insertBefore(errEl,document.getElementById('s-ai-result'));}
+    errEl.textContent='⚠ '+errMsg;
+  }
   document.getElementById('s-date').value=new Date().toISOString().split('T')[0];
   document.getElementById('s-price-card').style.display='block';
   document.getElementById('s-add-actions').style.display='flex';
