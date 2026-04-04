@@ -295,14 +295,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <!-- ── SINGLE ITEM ── -->
       <div id="single-flow">
         <div class="card">
-          <div class="card-title"><span class="step-num">1</span>Photo</div>
+          <div class="card-title"><span class="step-num">1</span>Photos <span style="font-size:11px;font-weight:400;color:var(--text2)">— first photo triggers AI, add as many as you like</span></div>
           <div class="upload-zone" onclick="document.getElementById('s-photo-inp').click()">
-            <input type="file" id="s-photo-inp" accept="image/*" onchange="handleSinglePhoto(event)">
+            <input type="file" id="s-photo-inp" accept="image/*" multiple onchange="handleSinglePhotos(event)">
             <div style="font-size:32px;margin-bottom:8px">📷</div>
-            <div style="font-size:15px;font-weight:700;margin-bottom:4px">Take or upload photo</div>
-            <div style="font-size:13px;color:var(--text2)">AI identifies brand, style, size & value</div>
+            <div style="font-size:15px;font-weight:700;margin-bottom:4px">Take or upload photos</div>
+            <div style="font-size:13px;color:var(--text2)">Select one or multiple — AI uses the first photo</div>
           </div>
-          <img id="s-photo-prev" class="preview-img" style="display:none">
+          <!-- photo grid -->
+          <div id="s-photo-grid" style="display:none;margin-top:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <div style="font-size:12px;font-weight:700;color:var(--text2)"><span id="s-photo-count">0</span> photo(s)</div>
+              <button class="btn btn-sm" onclick="document.getElementById('s-photo-inp').click()">+ Add more</button>
+            </div>
+            <div id="s-photo-thumbs" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:6px"></div>
+          </div>
         </div>
         <div class="card" id="s-ai-card" style="display:none">
           <div class="card-title"><span class="step-num">2</span>AI identification <span class="badge-ai">Auto-filled</span></div>
@@ -404,14 +411,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
             <div style="font-size:12px;color:var(--text2);margin-top:3px">Cost basis per item: <strong style="color:var(--amber)">$<span id="l2-cost-per">0.00</span></strong></div>
           </div>
           <div class="card">
-            <div class="card-title"><span class="step-num">📷</span>Photo this item</div>
+            <div class="card-title"><span class="step-num">📷</span>Photos for this item <span style="font-size:11px;font-weight:400;color:var(--text2)">— first triggers AI</span></div>
             <div class="upload-zone" onclick="document.getElementById('l-photo-inp').click()">
-              <input type="file" id="l-photo-inp" accept="image/*" onchange="handleLotPhoto(event)">
+              <input type="file" id="l-photo-inp" accept="image/*" multiple onchange="handleLotPhotos(event)">
               <div style="font-size:32px;margin-bottom:8px">📷</div>
-              <div style="font-size:15px;font-weight:700;margin-bottom:4px">Take or upload photo</div>
-              <div style="font-size:13px;color:var(--text2)">AI will identify this item automatically</div>
+              <div style="font-size:15px;font-weight:700;margin-bottom:4px">Take or upload photos</div>
+              <div style="font-size:13px;color:var(--text2)">Select one or multiple — AI uses the first photo</div>
             </div>
-            <img id="l-photo-prev" class="preview-img" style="display:none">
+            <div id="l-photo-grid" style="display:none;margin-top:12px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <div style="font-size:12px;font-weight:700;color:var(--text2)"><span id="l-photo-count">0</span> photo(s)</div>
+                <button class="btn btn-sm" onclick="document.getElementById('l-photo-inp').click()">+ Add more</button>
+              </div>
+              <div id="l-photo-thumbs" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:6px"></div>
+            </div>
           </div>
           <div class="card" id="l-ai-card" style="display:none">
             <div class="card-title">AI identification <span class="badge-ai">Auto-filled</span></div>
@@ -880,8 +893,9 @@ function updateLotItemUI(){
   document.getElementById('l-done-btn').style.display=isLast?'flex':'none';
   document.getElementById('l-item-progress').textContent=`${currentLotItems.length} of ${total} items added`;
   // reset item form
-  lotPhoto=null;lotAI=null;lotSize='';
-  document.getElementById('l-photo-prev').style.display='none';
+  lotPhoto=null;lotAI=null;lotSize='';lotPhotos=[];
+  document.getElementById('l-photo-grid').style.display='none';
+  document.getElementById('l-photo-thumbs').innerHTML='';
   document.getElementById('l-ai-card').style.display='none';
   document.getElementById('l-item-actions').style.display='none';
   document.getElementById('l-photo-inp').value='';
@@ -892,20 +906,9 @@ function updateLotItemUI(){
 
 // ── LOT PHOTO & AI ──
 async function handleLotPhoto(e){
-  const file=e.target.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=async function(ev){
-    lotPhoto=ev.target.result;
-    document.getElementById('l-photo-prev').src=lotPhoto;
-    document.getElementById('l-photo-prev').style.display='block';
-    document.getElementById('l-ai-card').style.display='block';
-    document.getElementById('l-ai-loading').style.display='block';
-    document.getElementById('l-ai-result').style.display='none';
-    document.getElementById('l-item-actions').style.display='none';
-    await analyzeLotPhoto(lotPhoto);
-  };
-  reader.readAsDataURL(file);
+  // legacy — replaced by handleLotPhotos
 }
+
 
 async function analyzeSinglePhoto(dataUrl){
   const b64=dataUrl.split(',')[1],mt=dataUrl.split(';')[0].split(':')[1];
@@ -1004,7 +1007,8 @@ function saveLotItem(isLast, noReview=false){
     size:customSize||lotSize||'—',
     description:document.getElementById('l-desc').value,
     keywords:document.getElementById('l-keywords').value,
-    photo:lotPhoto,
+    photo:lotPhotos[0]||null,
+    photos:lotPhotos.slice(),
     cost:currentLot.costPerItem,
     asking:parseFloat(document.getElementById('l-ask').value)||0,
     date:currentLot.date,
@@ -1063,19 +1067,94 @@ function updateSingleMargin(){
   }else box.style.display='none';
 }
 
-async function handleSinglePhoto(e){
-  const file=e.target.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=async function(ev){
-    singlePhoto=ev.target.result;
-    document.getElementById('s-photo-prev').src=singlePhoto;
-    document.getElementById('s-photo-prev').style.display='block';
+let singlePhotos=[]; // array of base64 strings
+let lotPhotos=[];    // array of base64 strings
+
+function renderPhotoGrid(photos, thumbsId, countId, gridId, removeFn) {
+  const grid=document.getElementById(gridId);
+  const thumbs=document.getElementById(thumbsId);
+  const count=document.getElementById(countId);
+  if(!photos.length){grid.style.display='none';return;}
+  grid.style.display='block';
+  count.textContent=photos.length;
+  thumbs.innerHTML=photos.map((p,i)=>`
+    <div style="position:relative">
+      <img src="${p}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:var(--radius);border:0.5px solid var(--border)${i===0?';border:2px solid var(--blue)':''}">
+      ${i===0?`<div style="position:absolute;top:3px;left:3px;background:var(--blue);color:#fff;font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px">AI</div>`:''}
+      <button onclick="${removeFn}(${i})" style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>`).join('');
+}
+
+async function handleSinglePhotos(e){
+  const files=Array.from(e.target.files);if(!files.length)return;
+  const isFirst=singlePhotos.length===0;
+  for(const file of files){
+    const data=await readFile(file);
+    singlePhotos.push(data);
+  }
+  renderPhotoGrid(singlePhotos,'s-photo-thumbs','s-photo-count','s-photo-grid','removeSinglePhoto');
+  if(isFirst){
+    // trigger AI on first photo
+    singlePhoto=singlePhotos[0];
     document.getElementById('s-ai-card').style.display='block';
     document.getElementById('s-ai-loading').style.display='block';
     document.getElementById('s-ai-result').style.display='none';
-    await analyzeSinglePhoto(singlePhoto);
-  };
-  reader.readAsDataURL(file);
+    await analyzeSinglePhoto(singlePhotos[0]);
+  }
+}
+
+function removeSinglePhoto(idx){
+  singlePhotos.splice(idx,1);
+  if(singlePhotos.length===0){
+    document.getElementById('s-photo-grid').style.display='none';
+    document.getElementById('s-ai-card').style.display='none';
+    document.getElementById('s-price-card').style.display='none';
+    document.getElementById('s-add-actions').style.display='none';
+    singlePhoto=null;singleAI=null;singleSize='';
+  } else {
+    singlePhoto=singlePhotos[0];
+    renderPhotoGrid(singlePhotos,'s-photo-thumbs','s-photo-count','s-photo-grid','removeSinglePhoto');
+  }
+}
+
+async function handleLotPhotos(e){
+  const files=Array.from(e.target.files);if(!files.length)return;
+  const isFirst=lotPhotos.length===0;
+  for(const file of files){
+    const data=await readFile(file);
+    lotPhotos.push(data);
+  }
+  renderPhotoGrid(lotPhotos,'l-photo-thumbs','l-photo-count','l-photo-grid','removeLotPhoto');
+  if(isFirst){
+    lotPhoto=lotPhotos[0];
+    document.getElementById('l-ai-card').style.display='block';
+    document.getElementById('l-ai-loading').style.display='block';
+    document.getElementById('l-ai-result').style.display='none';
+    document.getElementById('l-item-actions').style.display='none';
+    await analyzeLotPhoto(lotPhotos[0]);
+  }
+}
+
+function removeLotPhoto(idx){
+  lotPhotos.splice(idx,1);
+  if(lotPhotos.length===0){
+    document.getElementById('l-photo-grid').style.display='none';
+    document.getElementById('l-ai-card').style.display='none';
+    document.getElementById('l-item-actions').style.display='none';
+    lotPhoto=null;lotAI=null;lotSize='';
+  } else {
+    lotPhoto=lotPhotos[0];
+    renderPhotoGrid(lotPhotos,'l-photo-thumbs','l-photo-count','l-photo-grid','removeLotPhoto');
+  }
+}
+
+function readFile(file){
+  return new Promise((resolve,reject)=>{
+    const r=new FileReader();
+    r.onload=ev=>resolve(ev.target.result);
+    r.onerror=reject;
+    r.readAsDataURL(file);
+  });
 }
 
 function showSingleAI(r){
@@ -1129,7 +1208,8 @@ function buildSingleItem(status){
     size:customSize||singleSize||'—',
     description:document.getElementById('s-desc').value,
     keywords:document.getElementById('s-keywords').value,
-    photo:singlePhoto,
+    photo:singlePhotos[0]||null,
+    photos:singlePhotos.slice(),
     cost:parseFloat(document.getElementById('s-cost').value)||0,
     asking:parseFloat(document.getElementById('s-ask').value)||0,
     date:document.getElementById('s-date').value,
@@ -1159,8 +1239,9 @@ function saveSingleItemOnly(){
 }
 
 function resetSingle(){
-  singlePhoto=null;singleAI=null;singleSize='';
-  document.getElementById('s-photo-prev').style.display='none';
+  singlePhoto=null;singleAI=null;singleSize='';singlePhotos=[];
+  document.getElementById('s-photo-grid').style.display='none';
+  document.getElementById('s-photo-thumbs').innerHTML='';
   document.getElementById('s-ai-card').style.display='none';
   document.getElementById('s-price-card').style.display='none';
   document.getElementById('s-add-actions').style.display='none';
@@ -1245,9 +1326,13 @@ function renderReview(){
 function openModal(id){
   const item=getData().find(i=>i.id===id);if(!item)return;
   modalItemId=id;
-  const thumb=item.photo?`<img src="${item.photo}" style="width:100%;max-height:200px;object-fit:cover;border-radius:var(--radius);border:0.5px solid var(--border);display:block;margin-bottom:14px">`:'';
+  const photos=item.photos&&item.photos.length?item.photos:(item.photo?[item.photo]:[]);
+  const photoHtml=photos.length===0?''
+    :photos.length===1
+      ?`<img src="${photos[0]}" style="width:100%;max-height:200px;object-fit:cover;border-radius:var(--radius);border:0.5px solid var(--border);display:block;margin-bottom:14px">`
+      :`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:6px;margin-bottom:14px">${photos.map((p,i)=>`<img src="${p}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:var(--radius);border:${i===0?'2px solid var(--blue)':'0.5px solid var(--border)'};" title="${i===0?'Main photo (used for AI)':''}">`).join('')}</div>`;
   document.getElementById('modal-body').innerHTML=`
-    ${thumb}
+    ${photoHtml}
     ${item.isLot?`<div class="ai-box ai-box-amber" style="margin-bottom:12px"><div class="ai-label" style="color:var(--amber)">Lot: ${esc(item.lotName||'')}</div><div style="font-size:13px">Cost basis: <strong>$${(item.cost||0).toFixed(2)}</strong> (your share of lot price)</div></div>`:''}
     <div class="field"><label>Title</label><input type="text" id="m-name" value="${esc(item.name)}"></div>
     <div class="field-row"><div class="field"><label>Brand</label><input type="text" id="m-brand" value="${esc(item.brand)}"></div><div class="field"><label>Asking price ($)</label><input type="number" id="m-ask" step="0.01" value="${item.asking||''}" inputmode="decimal"></div></div>
@@ -1327,14 +1412,19 @@ function renderInv(){
   empty.style.display='none';
   body.innerHTML=items.map(item=>{
     const days=Math.floor((now-item.addedAt)/86400000);
-    const thumb=item.photo?`<img src="${item.photo}" class="item-thumb">`:`<div class="thumb-ph">👗</div>`;
+    const photos=item.photos&&item.photos.length?item.photos:(item.photo?[item.photo]:[]);
+    const thumbHtml=photos.length===0
+      ?`<div class="thumb-ph">👗</div>`
+      :photos.length===1
+        ?`<img src="${photos[0]}" class="item-thumb">`
+        :`<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;width:52px">${photos.slice(0,4).map((p,i)=>`<img src="${p}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:${i===0?'var(--radius) 0 0 0':i===1?'0 var(--radius) 0 0':i===2?'0 0 0 var(--radius)':'0 0 var(--radius) 0'};border:0.5px solid var(--border)">`).join('')}${photos.length>4?`<div style="position:absolute;bottom:2px;right:2px;background:rgba(0,0,0,0.6);color:#fff;font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px">+${photos.length-4}</div>`:''}</div>`;
     const slow=item.status!=='sold'&&days>21;
     const sc=item.status==='sold'?'pill-sold':item.status==='review'?'pill-review':slow?'pill-slow':item.listed?'pill-listed':'pill-active';
     const sl=item.status==='sold'?'Sold':item.status==='review'?'Review':slow?'Slow':item.listed?'Listed':'In stock';
     const binHtml=item.bin?`<span class="bin-badge" style="font-size:10px;padding:2px 7px">${item.bin}</span>`:`<span style="color:var(--text3);font-size:11px">—</span>`;
     const lotTag=item.isLot?`<span style="font-size:9px;background:var(--amber-bg);color:var(--amber);border-radius:10px;padding:1px 5px;font-weight:700">LOT</span>`:'';
     return`<tr>
-      <td>${thumb}</td>
+      <td style="width:58px"><div style="position:relative">${thumbHtml}</div></td>
       <td style="max-width:100px"><div style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.name} ${lotTag}</div><div style="font-size:10px;color:var(--text2)">${item.brand||item.category}</div></td>
       <td style="font-size:11px">${item.size||'—'}</td>
       <td>${binHtml}</td>
