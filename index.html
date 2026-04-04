@@ -910,16 +910,13 @@ async function handleLotPhoto(e){
 async function analyzeLotPhoto(dataUrl){
   const b64=dataUrl.split(',')[1],mt=dataUrl.split(';')[0].split(':')[1];
   try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:[
-        {type:'image',source:{type:'base64',media_type:mt,data:b64}},
-        {type:'text',text:`Expert clothing reseller. Analyze this photo. Return ONLY valid JSON (no markdown):
-{"type":"e.g. Jeans, Blouse, Sneakers","brand":"brand or Unknown","color":"colors","gender":"Womens/Mens/Unisex/Kids","style":"Vintage/Y2K/Classic/etc","size_guess":"size or Unknown","condition_guess":"New w/ tags/Like new/Excellent/Good/Fair/As-is","estimated_resale_low":10,"estimated_resale_high":35,"listing_title":"SEO title under 80 chars","description":"2-3 sentences brand style color condition","keywords":"kw1, kw2, kw3, kw4, kw5"}`}
-      ]}]})
+    const resp=await fetch(WEB_APP_URL,{
+      method:'POST',
+      body:JSON.stringify({action:'analyzeImage',imageData:b64,mediaType:mt})
     });
     const data=await resp.json();
-    lotAI=JSON.parse(data.content.map(i=>i.text||'').join('').replace(/```json|```/g,'').trim());
+    if(data.error)throw new Error(data.error);
+    lotAI=data.result;
     showLotAI(lotAI);
   }catch(err){showLotAIFallback();}
 }
@@ -1059,16 +1056,13 @@ async function handleSinglePhoto(e){
 async function analyzeSinglePhoto(dataUrl){
   const b64=dataUrl.split(',')[1],mt=dataUrl.split(';')[0].split(':')[1];
   try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:[
-        {type:'image',source:{type:'base64',media_type:mt,data:b64}},
-        {type:'text',text:`Expert clothing reseller. Analyze this photo. Return ONLY valid JSON (no markdown):
-{"type":"e.g. Jeans, Blouse, Sneakers","brand":"brand or Unknown","color":"colors","gender":"Womens/Mens/Unisex/Kids","style":"Vintage/Y2K/Classic/etc","size_guess":"size or Unknown","condition_guess":"New w/ tags/Like new/Excellent/Good/Fair/As-is","estimated_resale_low":10,"estimated_resale_high":35,"listing_title":"SEO title under 80 chars","description":"2-3 sentences brand style color condition","keywords":"kw1, kw2, kw3, kw4, kw5"}`}
-      ]}]})
+    const resp=await fetch(WEB_APP_URL,{
+      method:'POST',
+      body:JSON.stringify({action:'analyzeImage',imageData:b64,mediaType:mt})
     });
     const data=await resp.json();
-    singleAI=JSON.parse(data.content.map(i=>i.text||'').join('').replace(/```json|```/g,'').trim());
+    if(data.error)throw new Error(data.error);
+    singleAI=data.result;
     showSingleAI(singleAI);
   }catch(err){showSingleAIFallback();}
 }
