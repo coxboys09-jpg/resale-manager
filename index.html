@@ -1217,12 +1217,9 @@ async function analyzeSinglePhoto(dataUrl){
   const compressed=await compressImage(dataUrl);
   const b64=compressed.split(',')[1],mt=compressed.split(';')[0].split(':')[1];
   try{
-    const resp=await fetch(WEB_APP_URL,{
-      method:'POST',
-      mode:'cors',
-      cache:'no-cache',
-      headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify({action:'analyzeImage',imageData:b64,mediaType:mt})
+    const payload=encodeURIComponent(JSON.stringify({action:'analyzeImage',imageData:b64,mediaType:mt}));
+    const resp=await fetch(WEB_APP_URL+'?payload='+payload,{
+      method:'GET',mode:'cors',cache:'no-cache'
     });
     const data=await resp.json();
     if(data.error)throw new Error(data.error);
@@ -1237,12 +1234,9 @@ async function analyzeLotPhoto(dataUrl){
   const compressed=await compressImage(dataUrl);
   const b64=compressed.split(',')[1],mt=compressed.split(';')[0].split(':')[1];
   try{
-    const resp=await fetch(WEB_APP_URL,{
-      method:'POST',
-      mode:'cors',
-      cache:'no-cache',
-      headers:{'Content-Type':'text/plain'},
-      body:JSON.stringify({action:'analyzeImage',imageData:b64,mediaType:mt})
+    const payload=encodeURIComponent(JSON.stringify({action:'analyzeImage',imageData:b64,mediaType:mt}));
+    const resp=await fetch(WEB_APP_URL+'?payload='+payload,{
+      method:'GET',mode:'cors',cache:'no-cache'
     });
     const data=await resp.json();
     if(data.error)throw new Error(data.error);
@@ -1940,7 +1934,7 @@ function clearAll(){
 }
 
 // ── GOOGLE SHEETS SYNC ──
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzpLC6Gfr0wcZ6GW59BJ1h2o-6tArjdJpW3T46NROf8WHvZoedKCY2SPHXzJmFR8QseKg/exec';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwYZKkmq_4JpjH7YefLkxEA9sN2H-zq4h-w-6YZX_sDOSeU82OhrOQWy6GXS2PQ5rlOdg/exec';
 const SHEET_URL   = 'https://docs.google.com/spreadsheets/d/1TKCpsrWuzylN8eDAcWReceVCIVN73W3PhA99xmcqUII/edit';
 let isSyncing = false;
 let lastSyncTime = parseInt(localStorage.getItem('lastSyncTime')||'0');
@@ -1958,7 +1952,6 @@ function setSyncStatus(state, msg) {
 }
 
 async function syncNow(silent=false) {
-  // If already syncing, wait for it then try again
   if (isSyncing) {
     await new Promise(r=>setTimeout(r,2000));
   }
@@ -1973,12 +1966,12 @@ async function syncNow(silent=false) {
         expenses: _expenses.map(sanitizeForSheets)
       }
     };
-    const resp = await fetch(WEB_APP_URL, {
-      method: 'POST',
+    // Use GET with encoded payload — avoids Apps Script POST redirect issue
+    const encoded = encodeURIComponent(JSON.stringify(payload));
+    const resp = await fetch(WEB_APP_URL + '?payload=' + encoded, {
+      method: 'GET',
       mode: 'cors',
-      cache: 'no-cache',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(payload)
+      cache: 'no-cache'
     });
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const result = await resp.json();
@@ -1994,7 +1987,6 @@ async function syncNow(silent=false) {
   } catch(err) {
     setSyncStatus('err', err.message);
     if (!silent) showToast('Sync error: ' + err.message);
-    // Still resolve — don't block navigation on sync failure
   } finally {
     isSyncing = false;
   }
