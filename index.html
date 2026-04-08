@@ -1294,7 +1294,10 @@ function saveLotItem(isLast, noReview=false){
     status:noReview?'active':'review',
     addedAt:Date.now()
   };
-  const items=getData();items.push(item);saveData(items);
+  const items=getData();items.push(item);
+  try{localStorage.setItem(KEY,JSON.stringify(items));}catch(e){}
+  clearTimeout(window._syncTimer);
+  window._syncTimer=setTimeout(()=>syncNow(true),5000);
   currentLot.itemIds.push(item.id);
   currentLotItems.push(item);
   if(isLast||currentLotIdx===currentLot.itemCount-1){
@@ -1502,20 +1505,28 @@ function buildSingleItem(status){
 
 function saveSingleItem(){
   const items=getData(),item=buildSingleItem('review');
-  items.push(item);saveData(items);
+  items.push(item);
+  // Write directly to localStorage to avoid autoSync overwriting before navigation
+  try{localStorage.setItem(KEY,JSON.stringify(items));}catch(e){}
+  // Trigger sync in background after a delay
+  clearTimeout(window._syncTimer);
+  window._syncTimer=setTimeout(()=>syncNow(true),5000);
   document.getElementById('s-ok-msg').textContent='Saved! Opening Nifty review...';
   document.getElementById('s-add-ok').style.display='block';
   document.getElementById('s-add-actions').style.display='none';
-  setTimeout(()=>{resetSingle();goTo('review');},1400);
+  setTimeout(()=>{goTo('review');resetSingle();},1400);
 }
 
 function saveSingleItemOnly(){
   const items=getData(),item=buildSingleItem('active');
-  items.push(item);saveData(items);
+  items.push(item);
+  try{localStorage.setItem(KEY,JSON.stringify(items));}catch(e){}
+  clearTimeout(window._syncTimer);
+  window._syncTimer=setTimeout(()=>syncNow(true),5000);
   document.getElementById('s-ok-msg').textContent='Saved to inventory!';
   document.getElementById('s-add-ok').style.display='block';
   document.getElementById('s-add-actions').style.display='none';
-  setTimeout(()=>{resetSingle();goTo('inventory');},1400);
+  setTimeout(()=>{goTo('inventory');resetSingle();},1400);
 }
 
 function resetSingle(){
@@ -1945,16 +1956,22 @@ async function pullFromSheets() {
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const result = await resp.json();
     if (result.error) throw new Error(result.error);
-    if (result.items)    { saveData(result.items); }
-    if (result.lots)     { saveLots(result.lots); }
-    if (result.expenses) { saveExpenses(result.expenses); }
+    // Only overwrite local data if Sheet actually has items
+    // Use raw localStorage to avoid triggering autoSync loop
+    if (result.items && result.items.length > 0) {
+      try { localStorage.setItem(KEY, JSON.stringify(result.items)); } catch(e) {}
+    }
+    if (result.lots && result.lots.length > 0) {
+      try { localStorage.setItem(LOTS_KEY, JSON.stringify(result.lots)); } catch(e) {}
+    }
+    if (result.expenses && result.expenses.length > 0) {
+      try { localStorage.setItem(EXP_KEY, JSON.stringify(result.expenses)); } catch(e) {}
+    }
     const t = new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
     setSyncStatus('ok', 'Synced at ' + t);
-    showToast('Inventory loaded from Google Sheets ✓');
     renderDash(); renderInv(); updateBadges();
   } catch(err) {
     setSyncStatus('err', 'Pull failed — ' + err.message);
-    showToast('Pull failed: ' + err.message);
   }
 }
 
