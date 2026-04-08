@@ -1550,11 +1550,19 @@ function saveSingleItem(){
   const item=buildSingleItem('review');
   _items.push(item);
   try{localStorage.setItem(KEY,JSON.stringify(_items));}catch(e){}
-  document.getElementById('s-ok-msg').textContent='Saved! Opening Nifty review...';
+  // DEBUG — show exactly what we have before navigating
+  document.getElementById('s-ok-msg').textContent='Saved! Items in memory: '+_items.length;
   document.getElementById('s-add-ok').style.display='block';
   document.getElementById('s-add-actions').style.display='none';
-  // Navigate immediately — sync happens in background
-  setTimeout(()=>{goTo('review');resetSingle();syncNow(true);},800);
+  setTimeout(()=>{
+    // DEBUG — show count again right before navigating
+    showToast('Navigating with '+_items.length+' items in memory');
+    goTo('review');
+    resetSingle();
+    // DEBUG — show count after reset
+    showToast('After reset: '+_items.length+' items');
+    syncNow(true);
+  },1500);
 }
 
 function saveSingleItemOnly(){
@@ -2003,6 +2011,8 @@ async function pullFromSheets() {
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const result = await resp.json();
     if (result.error) throw new Error(result.error);
+    // DEBUG — show what came back from Sheets
+    showToast('Sheet has: '+(result.items||[]).length+' items');
     // Always update in-memory store from Sheets
     if (result.items)    { _items    = result.items;    try{localStorage.setItem(KEY,JSON.stringify(_items));}catch(e){} }
     if (result.lots)     { _lots     = result.lots;     try{localStorage.setItem(LOTS_KEY,JSON.stringify(_lots));}catch(e){} }
