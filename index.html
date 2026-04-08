@@ -1550,32 +1550,21 @@ function saveSingleItem(){
   const item=buildSingleItem('review');
   _items.push(item);
   try{localStorage.setItem(KEY,JSON.stringify(_items));}catch(e){}
-  document.getElementById('s-ok-msg').textContent='Saving...';
+  document.getElementById('s-ok-msg').textContent='Saved! Opening Nifty review...';
   document.getElementById('s-add-ok').style.display='block';
   document.getElementById('s-add-actions').style.display='none';
-  syncNow(true).then(()=>{
-    document.getElementById('s-ok-msg').textContent='Saved! Opening Nifty review...';
-    setTimeout(()=>{goTo('review');resetSingle();},600);
-  }).catch(()=>{
-    document.getElementById('s-ok-msg').textContent='Saved locally — sync pending';
-    setTimeout(()=>{goTo('review');resetSingle();},800);
-  });
+  // Navigate immediately — sync happens in background
+  setTimeout(()=>{goTo('review');resetSingle();syncNow(true);},800);
 }
 
 function saveSingleItemOnly(){
   const item=buildSingleItem('active');
   _items.push(item);
   try{localStorage.setItem(KEY,JSON.stringify(_items));}catch(e){}
-  document.getElementById('s-ok-msg').textContent='Saving...';
+  document.getElementById('s-ok-msg').textContent='Saved!';
   document.getElementById('s-add-ok').style.display='block';
   document.getElementById('s-add-actions').style.display='none';
-  syncNow(true).then(()=>{
-    document.getElementById('s-ok-msg').textContent='Saved!';
-    setTimeout(()=>{goTo('inventory');resetSingle();},600);
-  }).catch(()=>{
-    document.getElementById('s-ok-msg').textContent='Saved locally — sync pending';
-    setTimeout(()=>{goTo('inventory');resetSingle();},800);
-  });
+  setTimeout(()=>{goTo('inventory');resetSingle();syncNow(true);},800);
 }
 
 function resetSingle(){
@@ -1961,16 +1950,19 @@ function setSyncStatus(state, msg) {
 }
 
 async function syncNow(silent=false) {
-  if (isSyncing) return;
+  // If already syncing, wait for it then try again
+  if (isSyncing) {
+    await new Promise(r=>setTimeout(r,2000));
+  }
   isSyncing = true;
   setSyncStatus('syncing', 'Syncing…');
   try {
     const payload = {
       action: 'saveAll',
       data: {
-        items:    getData().map(sanitizeForSheets),
-        lots:     getLots().map(sanitizeForSheets),
-        expenses: getExpenses().map(sanitizeForSheets)
+        items:    _items.map(sanitizeForSheets),
+        lots:     _lots.map(sanitizeForSheets),
+        expenses: _expenses.map(sanitizeForSheets)
       }
     };
     const resp = await fetch(WEB_APP_URL, {
@@ -1984,7 +1976,7 @@ async function syncNow(silent=false) {
     const result = await resp.json();
     if (result.ok) {
       lastSyncTime = Date.now();
-      localStorage.setItem('lastSyncTime', lastSyncTime);
+      try{localStorage.setItem('lastSyncTime', lastSyncTime);}catch(e){}
       const t = new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
       setSyncStatus('ok', 'Synced at ' + t);
       if (!silent) showToast('Synced to Google Sheets ✓');
@@ -1992,10 +1984,12 @@ async function syncNow(silent=false) {
       throw new Error(result.error || 'Sync failed');
     }
   } catch(err) {
-    setSyncStatus('err', 'Sync failed — ' + err.message);
-    if (!silent) showToast('Sync failed: ' + err.message);
+    setSyncStatus('err', err.message);
+    if (!silent) showToast('Sync error: ' + err.message);
+    // Still resolve — don't block navigation on sync failure
+  } finally {
+    isSyncing = false;
   }
-  isSyncing = false;
 }
 
 async function pullFromSheets() {
