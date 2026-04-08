@@ -951,6 +951,39 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <script>
 // ── DATA ──
 const KEY='resale_v5', LOTS_KEY='resale_lots_v5';
+
+// ── IN-MEMORY STORE (Sheets is the source of truth) ──
+// Data lives here during the session, synced to/from Google Sheets
+let _items=[], _lots=[], _expenses=[];
+
+function getData(){
+  // Try localStorage first as cache, fall back to memory
+  try{
+    const cached=localStorage.getItem(KEY);
+    if(cached) _items=JSON.parse(cached);
+  }catch(e){}
+  return _items;
+}
+function saveData(d){
+  _items=d;
+  // Write to localStorage as cache
+  try{localStorage.setItem(KEY,JSON.stringify(d));}catch(e){}
+  autoSync();
+}
+function getLots(){
+  try{
+    const cached=localStorage.getItem(LOTS_KEY);
+    if(cached) _lots=JSON.parse(cached);
+  }catch(e){}
+  return _lots;
+}
+function saveLots(d){
+  _lots=d;
+  try{localStorage.setItem(LOTS_KEY,JSON.stringify(d));}catch(e){}
+  autoSync();
+}
+function getFee(){return parseFloat(localStorage.getItem('fee_pct')||'12')}
+function saveFee(){localStorage.setItem('fee_pct',document.getElementById('fee-pct').value)}
 let filterMode='all', addMode='single', singlePhoto=null, singleAI=null, singleSize='';
 let lotPhoto=null, lotAI=null, lotSize='', currentLot=null, currentLotItems=[], currentLotIdx=0;
 let modalItemId=null;
@@ -991,8 +1024,18 @@ function toggleHelp(el){el.classList.toggle('open');}
 
 // ── EXPENSES ──
 const EXP_KEY='resale_expenses_v1';
-function getExpenses(){try{return JSON.parse(localStorage.getItem(EXP_KEY)||'[]')}catch(e){return[]}}
-function saveExpenses(d){try{localStorage.setItem(EXP_KEY,JSON.stringify(d));autoSync();}catch(e){}}
+function getExpenses(){
+  try{
+    const cached=localStorage.getItem(EXP_KEY);
+    if(cached) _expenses=JSON.parse(cached);
+  }catch(e){}
+  return _expenses;
+}
+function saveExpenses(d){
+  _expenses=d;
+  try{localStorage.setItem(EXP_KEY,JSON.stringify(d));}catch(e){}
+  autoSync();
+}
 
 function setupExpenseCatToggle(){
   const sel=document.getElementById('exp-cat');
@@ -1504,29 +1547,35 @@ function buildSingleItem(status){
 }
 
 function saveSingleItem(){
-  const items=getData(),item=buildSingleItem('review');
-  items.push(item);
-  // Write directly to localStorage to avoid autoSync overwriting before navigation
-  try{localStorage.setItem(KEY,JSON.stringify(items));}catch(e){}
-  // Trigger sync in background after a delay
-  clearTimeout(window._syncTimer);
-  window._syncTimer=setTimeout(()=>syncNow(true),5000);
-  document.getElementById('s-ok-msg').textContent='Saved! Opening Nifty review...';
+  const item=buildSingleItem('review');
+  _items.push(item);
+  try{localStorage.setItem(KEY,JSON.stringify(_items));}catch(e){}
+  document.getElementById('s-ok-msg').textContent='Saving...';
   document.getElementById('s-add-ok').style.display='block';
   document.getElementById('s-add-actions').style.display='none';
-  setTimeout(()=>{goTo('review');resetSingle();},1400);
+  syncNow(true).then(()=>{
+    document.getElementById('s-ok-msg').textContent='Saved! Opening Nifty review...';
+    setTimeout(()=>{goTo('review');resetSingle();},600);
+  }).catch(()=>{
+    document.getElementById('s-ok-msg').textContent='Saved locally — sync pending';
+    setTimeout(()=>{goTo('review');resetSingle();},800);
+  });
 }
 
 function saveSingleItemOnly(){
-  const items=getData(),item=buildSingleItem('active');
-  items.push(item);
-  try{localStorage.setItem(KEY,JSON.stringify(items));}catch(e){}
-  clearTimeout(window._syncTimer);
-  window._syncTimer=setTimeout(()=>syncNow(true),5000);
-  document.getElementById('s-ok-msg').textContent='Saved to inventory!';
+  const item=buildSingleItem('active');
+  _items.push(item);
+  try{localStorage.setItem(KEY,JSON.stringify(_items));}catch(e){}
+  document.getElementById('s-ok-msg').textContent='Saving...';
   document.getElementById('s-add-ok').style.display='block';
   document.getElementById('s-add-actions').style.display='none';
-  setTimeout(()=>{goTo('inventory');resetSingle();},1400);
+  syncNow(true).then(()=>{
+    document.getElementById('s-ok-msg').textContent='Saved!';
+    setTimeout(()=>{goTo('inventory');resetSingle();},600);
+  }).catch(()=>{
+    document.getElementById('s-ok-msg').textContent='Saved locally — sync pending';
+    setTimeout(()=>{goTo('inventory');resetSingle();},800);
+  });
 }
 
 function resetSingle(){
@@ -1887,7 +1936,11 @@ function exportCSV(){
   URL.revokeObjectURL(url);
 }
 
-function clearAll(){localStorage.removeItem(KEY);localStorage.removeItem(LOTS_KEY);localStorage.removeItem(EXP_KEY);renderInv();renderDash();updateBadges();}
+function clearAll(){
+  _items=[];_lots=[];_expenses=[];
+  localStorage.removeItem(KEY);localStorage.removeItem(LOTS_KEY);localStorage.removeItem(EXP_KEY);
+  renderInv();renderDash();updateBadges();
+}
 
 // ── GOOGLE SHEETS SYNC ──
 const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzpLC6Gfr0wcZ6GW59BJ1h2o-6tArjdJpW3T46NROf8WHvZoedKCY2SPHXzJmFR8QseKg/exec';
@@ -1956,22 +2009,20 @@ async function pullFromSheets() {
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const result = await resp.json();
     if (result.error) throw new Error(result.error);
-    // Only overwrite local data if Sheet actually has items
-    // Use raw localStorage to avoid triggering autoSync loop
-    if (result.items && result.items.length > 0) {
-      try { localStorage.setItem(KEY, JSON.stringify(result.items)); } catch(e) {}
-    }
-    if (result.lots && result.lots.length > 0) {
-      try { localStorage.setItem(LOTS_KEY, JSON.stringify(result.lots)); } catch(e) {}
-    }
-    if (result.expenses && result.expenses.length > 0) {
-      try { localStorage.setItem(EXP_KEY, JSON.stringify(result.expenses)); } catch(e) {}
-    }
+    // Always update in-memory store from Sheets
+    if (result.items)    { _items    = result.items;    try{localStorage.setItem(KEY,JSON.stringify(_items));}catch(e){} }
+    if (result.lots)     { _lots     = result.lots;     try{localStorage.setItem(LOTS_KEY,JSON.stringify(_lots));}catch(e){} }
+    if (result.expenses) { _expenses = result.expenses; try{localStorage.setItem(EXP_KEY,JSON.stringify(_expenses));}catch(e){} }
     const t = new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
     setSyncStatus('ok', 'Synced at ' + t);
     renderDash(); renderInv(); updateBadges();
   } catch(err) {
-    setSyncStatus('err', 'Pull failed — ' + err.message);
+    // On pull failure, try loading from localStorage cache
+    try{const c=localStorage.getItem(KEY);if(c)_items=JSON.parse(c);}catch(e){}
+    try{const c=localStorage.getItem(LOTS_KEY);if(c)_lots=JSON.parse(c);}catch(e){}
+    try{const c=localStorage.getItem(EXP_KEY);if(c)_expenses=JSON.parse(c);}catch(e){}
+    setSyncStatus('err', 'Offline — using local data');
+    renderDash(); renderInv(); updateBadges();
   }
 }
 
